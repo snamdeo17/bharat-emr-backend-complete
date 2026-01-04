@@ -11,18 +11,21 @@ import java.util.Optional;
 
 @Repository
 public interface PatientRepository extends JpaRepository<Patient, Long> {
-    
+
     Optional<Patient> findByMobileNumber(String mobileNumber);
-    
+
     Optional<Patient> findByPatientId(String patientId);
-    
+
     List<Patient> findByOnboardedByDoctorId(Long doctorId);
-    
+
     boolean existsByMobileNumber(String mobileNumber);
-    
+
     @Query("SELECT COUNT(p) FROM Patient p WHERE p.isActive = true")
     long countActivePatients();
-    
+
     @Query("SELECT p FROM Patient p WHERE p.onboardedByDoctor.id = :doctorId AND p.isActive = true")
     List<Patient> findActivePatientsByDoctor(@Param("doctorId") Long doctorId);
+
+    @Query("SELECT COUNT(p) FROM Patient p WHERE p.onboardedByDoctor.id = :doctorId AND p.isActive = true")
+    long countActivePatientsByDoctor(@Param("doctorId") Long doctorId);
 }

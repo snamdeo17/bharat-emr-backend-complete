@@ -1,8 +1,13 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/bharatemr
-    username: bharatemr_user
-    password: bharatemr_password
+    url: jdbc:h2:mem:bharatemr;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
   jpa:
     hibernate:
       ddl-auto: update
@@ -10,9 +15,9 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
   flyway:
-    enabled: true
-    baseline-on-migrate: true
+    enabled: false
 
 logging:
   level:
@@ -29,11 +34,11 @@ app:
     expiration: 300000
     length: 6
   twilio:
-    account-sid: your_account_sid
-    auth-token: your_auth_token
+    account-sid: AC_placeholder
+    auth-token: token_placeholder
     phone-number: +1234567890
   whatsapp:
-    api-key: your_whatsapp_api_key
+    api-key: dummy_key
     api-url: https://api.whatsapp.com
   file-upload:
     dir: ./uploads

@@ -9,12 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthResponseDto {
+public class OtpResponseDto {
     private String token;
-    private String refreshToken;
-    private String userId;
-    private String name;
-    private String userType;
-    private String specialization;
-    private Long expiresIn;
+    private Object user;
 }
