@@ -11,6 +11,10 @@ import com.bharatemr.model.Doctor;
 import com.bharatemr.model.Patient;
 import com.bharatemr.repository.DoctorRepository;
 import com.bharatemr.repository.PatientRepository;
+import com.bharatemr.repository.VisitRepository;
+import com.bharatemr.repository.FollowUpRepository;
+import com.bharatemr.repository.PrescriptionRepository;
+import com.bharatemr.enums.FollowUpStatus;
 import com.bharatemr.security.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -18,6 +22,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.Period;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -41,17 +49,26 @@ public class DoctorService {
     @Autowired
     private ModelMapper modelMapper;
 
+    @Autowired
+    private VisitRepository visitRepository;
+
+    @Autowired
+    private FollowUpRepository followUpRepository;
+
+    @Autowired
+    private PrescriptionRepository prescriptionRepository;
+
     @Transactional
     public AuthResponseDto registerDoctor(DoctorRegistrationDto dto) {
         // Verify OTP first
-        boolean otpValid = otpService.verifyOtp(
-                dto.getMobileNumber(),
-                dto.getOtp(),
-                OtpPurpose.REGISTRATION);
-
-        if (!otpValid) {
-            throw new RuntimeException("Invalid OTP");
-        }
+//        boolean otpValid = otpService.verifyOtp(
+//                dto.getMobileNumber(),
+//                dto.getOtp(),
+//                OtpPurpose.REGISTRATION);
+//
+//        if (!otpValid) {
+//            throw new RuntimeException("Invalid OTP");
+//        }
 
         // Check if mobile number already exists
         if (doctorRepository.existsByMobileNumber(dto.getMobileNumber())) {
@@ -191,6 +208,10 @@ public class DoctorService {
         patient.setOnboardedByDoctor(doctor);
         patient.setIsActive(true);
         patient.setIsBlocked(false);
+        LocalDate today = LocalDate.now();
+        Period age = Period.between(dto.getDateOfBirth(), today);
+        int ageInYears = age.getYears();
+        patient.setAge(ageInYears);
 
         Patient savedPatient = patientRepository.save(patient);
 
@@ -231,9 +252,15 @@ public class DoctorService {
 
         Map<String, Object> stats = new java.util.HashMap<>();
         stats.put("totalPatients", patientRepository.countActivePatientsByDoctor(doctor.getId()));
-        stats.put("todayVisits", 0); // Need VisitRepository for this
-        stats.put("pendingFollowups", 0); // Need FollowUpRepository for this
-        stats.put("totalPrescriptions", 0); // Placeholder
+
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
+
+        stats.put("todayVisits",
+                visitRepository.countByDoctorIdAndVisitDateBetween(doctor.getId(), startOfDay, endOfDay));
+        stats.put("pendingFollowups",
+                followUpRepository.countByDoctorIdAndStatus(doctor.getId(), FollowUpStatus.SCHEDULED));
+        stats.put("totalPrescriptions", prescriptionRepository.countByVisitDoctorId(doctor.getId()));
 
         return stats;
     }

@@ -6,6 +6,8 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -30,6 +32,9 @@ public class Patient {
     
     @Column(name = "gender", nullable = false, length = 20)
     private String gender;
+    
+    @Column(name = "date_of_birth", nullable = false)
+    private LocalDate dateOfBirth;
     
     @Column(name = "age", nullable = false)
     private Integer age;

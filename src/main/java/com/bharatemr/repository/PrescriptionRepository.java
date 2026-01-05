@@ -8,8 +8,10 @@ import java.util.Optional;
 
 @Repository
 public interface PrescriptionRepository extends JpaRepository<Prescription, Long> {
-    
+
     Optional<Prescription> findByVisitId(Long visitId);
-    
+
     boolean existsByVisitId(Long visitId);
+
+    long countByVisitDoctorId(Long doctorId);
 }
