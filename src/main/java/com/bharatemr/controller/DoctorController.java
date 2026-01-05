@@ -65,6 +65,25 @@ public class DoctorController {
         return ResponseEntity.ok(ApiResponse.success(patients));
     }
 
+    @GetMapping("/profile")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<ApiResponse<DoctorDto>> getMyProfile() {
+        String doctorId = SecurityUtils.getCurrentUserId();
+        log.info("Fetching my profile: {}", doctorId);
+        DoctorDto doctor = doctorService.getDoctorProfile(doctorId);
+        return ResponseEntity.ok(ApiResponse.success(doctor));
+    }
+
+    @PutMapping("/profile")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<ApiResponse<DoctorDto>> updateMyProfile(
+            @Valid @RequestBody DoctorDto dto) {
+        String doctorId = SecurityUtils.getCurrentUserId();
+        log.info("Updating my profile: {}", doctorId);
+        DoctorDto updated = doctorService.updateDoctorProfile(doctorId, dto);
+        return ResponseEntity.ok(ApiResponse.success("Profile updated successfully", updated));
+    }
+
     @GetMapping("/profile/{doctorId}")
     @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN')")
     public ResponseEntity<ApiResponse<DoctorDto>> getDoctorProfile(
@@ -110,5 +129,41 @@ public class DoctorController {
         List<PatientDto> patients = doctorService.getDoctorPatients(doctorId);
 
         return ResponseEntity.ok(ApiResponse.success(patients));
+    }
+
+    @Autowired
+    private com.bharatemr.service.FollowUpService followUpService;
+
+    @Autowired
+    private com.bharatemr.service.VisitService visitService;
+
+    @GetMapping("/followups")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<ApiResponse<List<FollowUpDto>>> getMyFollowUps() {
+        String doctorId = SecurityUtils.getCurrentUserId();
+        log.info("Fetching followups for doctor: {}", doctorId);
+        List<FollowUpDto> followUps = followUpService.getFollowUpsByDoctor(doctorId);
+        return ResponseEntity.ok(ApiResponse.success(followUps));
+    }
+
+    @GetMapping("/visits")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<ApiResponse<List<VisitDto>>> getMyVisits() {
+        String doctorId = SecurityUtils.getCurrentUserId();
+        log.info("Fetching visits for doctor: {}", doctorId);
+        List<VisitDto> visits = visitService.getVisitsByDoctor(doctorId);
+        return ResponseEntity.ok(ApiResponse.success(visits));
+    }
+
+    @PutMapping("/followups/{id}/status")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<ApiResponse<FollowUpDto>> updateFollowUpStatus(
+            @PathVariable Long id,
+            @RequestParam String status) {
+        log.info("Updating follow-up status: {} to {}", id, status);
+        FollowUpDto dto = new FollowUpDto();
+        dto.setStatus(status);
+        FollowUpDto updated = followUpService.updateFollowUp(id, dto);
+        return ResponseEntity.ok(ApiResponse.success("Status updated", updated));
     }
 }
