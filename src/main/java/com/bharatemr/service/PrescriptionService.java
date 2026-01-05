@@ -23,34 +23,34 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class PrescriptionService {
-    
+
     @Autowired
     private PrescriptionRepository prescriptionRepository;
-    
+
     @Autowired
     private VisitRepository visitRepository;
-    
+
     @Autowired
     private PdfGeneratorService pdfGeneratorService;
-    
+
     @Autowired
     private ModelMapper modelMapper;
-    
+
     @Transactional
     public Map<String, Object> createPrescription(Long visitId, List<MedicineDto> medicines, List<TestDto> tests) {
         Visit visit = visitRepository.findById(visitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Visit not found"));
-        
+
         // Check if prescription already exists
         if (prescriptionRepository.existsByVisitId(visitId)) {
             throw new RuntimeException("Prescription already exists for this visit");
         }
-        
+
         Prescription prescription = new Prescription();
         prescription.setVisit(visit);
-        
+
         Prescription savedPrescription = prescriptionRepository.save(prescription);
-        
+
         // Add medicines
         if (medicines != null && !medicines.isEmpty()) {
             for (MedicineDto medicineDto : medicines) {
@@ -59,7 +59,7 @@ public class PrescriptionService {
                 savedPrescription.addMedicine(medicine);
             }
         }
-        
+
         // Add tests
         if (tests != null && !tests.isEmpty()) {
             for (TestDto testDto : tests) {
@@ -68,24 +68,25 @@ public class PrescriptionService {
                 savedPrescription.addTest(test);
             }
         }
-        
+
         prescriptionRepository.save(savedPrescription);
-        
+
         log.info("Prescription created for visit: {}", visitId);
-        
+
         Map<String, Object> response = new HashMap<>();
         response.put("prescriptionId", savedPrescription.getId());
         response.put("visitId", visitId);
         response.put("medicines", medicines);
         response.put("tests", tests);
-        
+
         return response;
     }
-    
+
+    @Transactional(readOnly = true)
     public Map<String, Object> getPrescriptionByVisit(Long visitId) {
         Prescription prescription = prescriptionRepository.findByVisitId(visitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Prescription not found for this visit"));
-        
+
         Map<String, Object> response = new HashMap<>();
         response.put("prescriptionId", prescription.getId());
         response.put("visitId", visitId);
@@ -97,23 +98,23 @@ public class PrescriptionService {
                 .collect(Collectors.toList()));
         response.put("pdfUrl", prescription.getPdfUrl());
         response.put("createdAt", prescription.getCreatedAt());
-        
+
         return response;
     }
-    
+
     @Transactional
     public String generatePrescriptionPdf(Long visitId) {
         Visit visit = visitRepository.findById(visitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Visit not found"));
-        
+
         Prescription prescription = prescriptionRepository.findByVisitId(visitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Prescription not found"));
-        
+
         try {
             String pdfUrl = pdfGeneratorService.generatePrescriptionPdf(visit, prescription);
             prescription.setPdfUrl(pdfUrl);
             prescriptionRepository.save(prescription);
-            
+
             log.info("Prescription PDF generated for visit: {}", visitId);
             return pdfUrl;
         } catch (Exception e) {
@@ -121,15 +122,16 @@ public class PrescriptionService {
             throw new RuntimeException("Failed to generate PDF: " + e.getMessage());
         }
     }
-    
+
+    @Transactional(readOnly = true)
     public byte[] downloadPrescriptionPdf(Long visitId) {
         Prescription prescription = prescriptionRepository.findByVisitId(visitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Prescription not found"));
-        
+
         if (prescription.getPdfUrl() == null) {
             throw new ResourceNotFoundException("PDF not generated yet");
         }
-        
+
         try {
             return pdfGeneratorService.readPdfFile(prescription.getPdfUrl());
         } catch (Exception e) {

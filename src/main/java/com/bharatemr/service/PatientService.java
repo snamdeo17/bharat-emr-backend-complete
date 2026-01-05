@@ -81,6 +81,7 @@ public class PatientService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public PatientDto getPatientProfile(String patientId) {
         Patient patient = patientRepository.findByPatientId(patientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
@@ -92,6 +93,7 @@ public class PatientService {
         return dto;
     }
 
+    @Transactional(readOnly = true)
     public Map<String, Object> getPatientDashboard(String patientId) {
         Patient patient = patientRepository.findByPatientId(patientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
@@ -120,6 +122,7 @@ public class PatientService {
         return dashboard;
     }
 
+    @Transactional(readOnly = true)
     public List<VisitDto> getPatientVisits(String patientId) {
         Patient patient = patientRepository.findByPatientId(patientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
@@ -154,6 +157,7 @@ public class PatientService {
         return modelMapper.map(updated, PatientDto.class);
     }
 
+    @Transactional(readOnly = true)
     public PatientDto getPatientByMobileNumber(String mobileNumber) {
         Patient patient = patientRepository.findByMobileNumber(mobileNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
@@ -161,12 +165,14 @@ public class PatientService {
         return modelMapper.map(patient, PatientDto.class);
     }
 
+    @Transactional(readOnly = true)
     public List<PatientDto> getAllPatients() {
         return patientRepository.findAll().stream()
                 .map(patient -> modelMapper.map(patient, PatientDto.class))
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public long getActivePatientsCount() {
         return patientRepository.countActivePatients();
     }

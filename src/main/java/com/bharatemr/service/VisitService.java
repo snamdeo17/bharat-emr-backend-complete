@@ -23,41 +23,41 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class VisitService {
-    
+
     @Autowired
     private VisitRepository visitRepository;
-    
+
     @Autowired
     private DoctorRepository doctorRepository;
-    
+
     @Autowired
     private PatientRepository patientRepository;
-    
+
     @Autowired
     private PrescriptionRepository prescriptionRepository;
-    
+
     @Autowired
     private FollowUpRepository followUpRepository;
-    
+
     @Autowired
     private NotificationService notificationService;
-    
+
     @Autowired
     private ModelMapper modelMapper;
-    
+
     @Value("${app.mobile-app.download-link:https://bharatemr.com/download}")
     private String appDownloadLink;
-    
+
     @Transactional
     public VisitDto createVisit(VisitDto visitDto, String doctorId) {
         // Fetch doctor
         Doctor doctor = doctorRepository.findByDoctorId(doctorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
-        
+
         // Fetch patient
         Patient patient = patientRepository.findById(visitDto.getPatientId())
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
-        
+
         // Create visit
         Visit visit = Visit.builder()
                 .patient(patient)
@@ -70,21 +70,21 @@ public class VisitService {
                 .surgicalHistory(visitDto.getSurgicalHistory())
                 .clinicalNotes(visitDto.getClinicalNotes())
                 .build();
-        
+
         Visit savedVisit = visitRepository.save(visit);
-        
+
         // Create prescription if medicines or tests provided
         if ((visitDto.getMedicines() != null && !visitDto.getMedicines().isEmpty()) ||
-            (visitDto.getTests() != null && !visitDto.getTests().isEmpty())) {
-            
+                (visitDto.getTests() != null && !visitDto.getTests().isEmpty())) {
+
             Prescription prescription = Prescription.builder()
                     .visit(savedVisit)
                     .medicines(new ArrayList<>())
                     .tests(new ArrayList<>())
                     .build();
-            
+
             Prescription savedPrescription = prescriptionRepository.save(prescription);
-            
+
             // Add medicines
             if (visitDto.getMedicines() != null) {
                 for (MedicineDto medicineDto : visitDto.getMedicines()) {
@@ -93,7 +93,7 @@ public class VisitService {
                     savedPrescription.getMedicines().add(medicine);
                 }
             }
-            
+
             // Add tests
             if (visitDto.getTests() != null) {
                 for (TestDto testDto : visitDto.getTests()) {
@@ -102,10 +102,10 @@ public class VisitService {
                     savedPrescription.getTests().add(test);
                 }
             }
-            
+
             prescriptionRepository.save(savedPrescription);
         }
-        
+
         // Create follow-up if scheduled
         if (visitDto.getFollowUp() != null && visitDto.getFollowUp().getScheduledDate() != null) {
             FollowUp followUp = FollowUp.builder()
@@ -115,61 +115,63 @@ public class VisitService {
                     .scheduledDate(visitDto.getFollowUp().getScheduledDate())
                     .notes(visitDto.getFollowUp().getNotes())
                     .build();
-            
+
             followUpRepository.save(followUp);
         }
-        
+
         // Send notification to patient
         String summary = visitDto.getChiefComplaint();
         notificationService.sendVisitNotification(
-            patient.getMobileNumber(),
-            patient.getFullName(),
-            doctor.getFullName(),
-            summary,
-            appDownloadLink,
-            patient.getPatientId()
-        );
-        
-        log.info("Visit created: ID={} for patient: {} by doctor: {}", 
-            savedVisit.getId(), patient.getPatientId(), doctorId);
-        
+                patient.getMobileNumber(),
+                patient.getFullName(),
+                doctor.getFullName(),
+                summary,
+                appDownloadLink,
+                patient.getPatientId());
+
+        log.info("Visit created: ID={} for patient: {} by doctor: {}",
+                savedVisit.getId(), patient.getPatientId(), doctorId);
+
         return convertToDto(savedVisit);
     }
-    
+
+    @Transactional(readOnly = true)
     public VisitDto getVisitById(Long visitId) {
         Visit visit = visitRepository.findById(visitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Visit not found"));
-        
+
         return convertToDto(visit);
     }
-    
+
+    @Transactional(readOnly = true)
     public List<VisitDto> getVisitsByDoctor(String doctorId) {
         Doctor doctor = doctorRepository.findByDoctorId(doctorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
-        
+
         List<Visit> visits = visitRepository.findByDoctorIdOrderByVisitDateDesc(doctor.getId());
-        
+
         return visits.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
-    
+
+    @Transactional(readOnly = true)
     public List<VisitDto> getVisitsByPatient(String patientId) {
         Patient patient = patientRepository.findByPatientId(patientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
-        
+
         List<Visit> visits = visitRepository.findByPatientIdOrderByVisitDateDesc(patient.getId());
-        
+
         return visits.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
-    
+
     @Transactional
     public VisitDto updateVisit(Long visitId, VisitDto visitDto) {
         Visit visit = visitRepository.findById(visitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Visit not found"));
-        
+
         // Update allowed fields
         if (visitDto.getChiefComplaint() != null) {
             visit.setChiefComplaint(visitDto.getChiefComplaint());
@@ -189,36 +191,36 @@ public class VisitService {
         if (visitDto.getClinicalNotes() != null) {
             visit.setClinicalNotes(visitDto.getClinicalNotes());
         }
-        
+
         Visit updated = visitRepository.save(visit);
-        
+
         log.info("Visit updated: ID={}", visitId);
-        
+
         return convertToDto(updated);
     }
-    
-    public List<VisitDto> getVisitsByDateRange(String doctorId, 
-                                                LocalDateTime startDate, 
-                                                LocalDateTime endDate) {
+
+    @Transactional(readOnly = true)
+    public List<VisitDto> getVisitsByDateRange(String doctorId,
+            LocalDateTime startDate,
+            LocalDateTime endDate) {
         Doctor doctor = doctorRepository.findByDoctorId(doctorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
-        
+
         List<Visit> visits = visitRepository.findVisitsByDoctorAndDateRange(
-            doctor.getId(), startDate, endDate
-        );
-        
+                doctor.getId(), startDate, endDate);
+
         return visits.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
-    
+
     private VisitDto convertToDto(Visit visit) {
         VisitDto dto = modelMapper.map(visit, VisitDto.class);
         dto.setPatientName(visit.getPatient().getFullName());
         dto.setDoctorName(visit.getDoctor().getFullName());
         dto.setPatientId(visit.getPatient().getId());
         dto.setDoctorId(visit.getDoctor().getId());
-        
+
         // Add prescription data if exists
         prescriptionRepository.findByVisitId(visit.getId()).ifPresent(prescription -> {
             dto.setMedicines(prescription.getMedicines().stream()
@@ -229,7 +231,7 @@ public class VisitService {
                     .collect(Collectors.toList()));
             dto.setPrescriptionPdfUrl(prescription.getPdfUrl());
         });
-        
+
         return dto;
     }
 }

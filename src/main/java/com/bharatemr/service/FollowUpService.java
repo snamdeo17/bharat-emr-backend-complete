@@ -77,6 +77,7 @@ public class FollowUpService {
         return convertToDto(saved);
     }
 
+    @Transactional(readOnly = true)
     public FollowUpDto getFollowUpById(Long id) {
         FollowUp followUp = followUpRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Follow-up not found"));
@@ -128,6 +129,7 @@ public class FollowUpService {
         log.info("Follow-up completed: ID={}", id);
     }
 
+    @Transactional(readOnly = true)
     public List<FollowUpDto> getFollowUpsByDoctor(String doctorId) {
         Doctor doctor = doctorRepository.findByDoctorId(doctorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
@@ -139,6 +141,7 @@ public class FollowUpService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<FollowUpDto> getFollowUpsByPatient(String patientId) {
         Patient patient = patientRepository.findByPatientId(patientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
@@ -150,6 +153,7 @@ public class FollowUpService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<FollowUpDto> getUpcomingFollowUpsByPatient(String patientId) {
         Patient patient = patientRepository.findByPatientId(patientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
@@ -164,9 +168,11 @@ public class FollowUpService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<FollowUpDto> getTodaysFollowUps() {
-        LocalDate startOfDay = LocalDate.now();//.withHour(0).withMinute(0).withSecond(0);
-        //LocalDateTime endOfDay = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59);
+        LocalDate startOfDay = LocalDate.now();// .withHour(0).withMinute(0).withSecond(0);
+        // LocalDateTime endOfDay =
+        // LocalDateTime.now().withHour(23).withMinute(59).withSecond(59);
 
         List<FollowUp> followUps = followUpRepository.findByStatusOrderByScheduledDateAsc(FollowUpStatus.SCHEDULED)
                 .stream()

@@ -61,14 +61,14 @@ public class DoctorService {
     @Transactional
     public AuthResponseDto registerDoctor(DoctorRegistrationDto dto) {
         // Verify OTP first
-//        boolean otpValid = otpService.verifyOtp(
-//                dto.getMobileNumber(),
-//                dto.getOtp(),
-//                OtpPurpose.REGISTRATION);
-//
-//        if (!otpValid) {
-//            throw new RuntimeException("Invalid OTP");
-//        }
+        // boolean otpValid = otpService.verifyOtp(
+        // dto.getMobileNumber(),
+        // dto.getOtp(),
+        // OtpPurpose.REGISTRATION);
+        //
+        // if (!otpValid) {
+        // throw new RuntimeException("Invalid OTP");
+        // }
 
         // Check if mobile number already exists
         if (doctorRepository.existsByMobileNumber(dto.getMobileNumber())) {
@@ -163,6 +163,7 @@ public class DoctorService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public DoctorDto getDoctorProfile(String doctorId) {
         Doctor doctor = doctorRepository.findByDoctorId(doctorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
@@ -225,6 +226,7 @@ public class DoctorService {
         return result;
     }
 
+    @Transactional(readOnly = true)
     public List<PatientDto> getDoctorPatients(String doctorId) {
         Doctor doctor = doctorRepository.findByDoctorId(doctorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
@@ -240,12 +242,14 @@ public class DoctorService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<DoctorDto> getAllDoctors() {
         return doctorRepository.findAll().stream()
                 .map(doctor -> modelMapper.map(doctor, DoctorDto.class))
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public Map<String, Object> getDoctorDashboardStats(String doctorId) {
         Doctor doctor = doctorRepository.findByDoctorId(doctorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
@@ -265,6 +269,7 @@ public class DoctorService {
         return stats;
     }
 
+    @Transactional(readOnly = true)
     public List<PatientDto> getRecentPatients(String doctorId) {
         Doctor doctor = doctorRepository.findByDoctorId(doctorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
