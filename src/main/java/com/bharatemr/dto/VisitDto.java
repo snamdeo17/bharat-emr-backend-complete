@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -25,7 +27,7 @@ public class VisitDto {
     private Long doctorId;
     private String patientName;
     private String doctorName;
-    private LocalDateTime visitDate;
+    private LocalDate visitDate;
     
     @NotBlank(message = "Chief complaint is required")
     private String chiefComplaint;

@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.Future;
 import javax.validation.constraints.NotNull;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -19,7 +21,7 @@ public class FollowUpDto {
     
     @NotNull(message = "Scheduled date is required")
     @Future(message = "Scheduled date must be in the future")
-    private LocalDateTime scheduledDate;
+    private LocalDate scheduledDate;
     
     private String status;
     private String notes;

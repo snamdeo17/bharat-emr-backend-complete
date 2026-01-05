@@ -18,6 +18,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -155,7 +156,7 @@ public class FollowUpService {
 
         List<FollowUp> followUps = followUpRepository.findByPatientIdOrderByScheduledDateDesc(patient.getId());
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDate now = LocalDate.now();
 
         return followUps.stream()
                 .filter(f -> f.getScheduledDate().isAfter(now) && f.getStatus() == FollowUpStatus.SCHEDULED)
@@ -164,12 +165,12 @@ public class FollowUpService {
     }
 
     public List<FollowUpDto> getTodaysFollowUps() {
-        LocalDateTime startOfDay = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0);
-        LocalDateTime endOfDay = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59);
+        LocalDate startOfDay = LocalDate.now();//.withHour(0).withMinute(0).withSecond(0);
+        //LocalDateTime endOfDay = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59);
 
         List<FollowUp> followUps = followUpRepository.findByStatusOrderByScheduledDateAsc(FollowUpStatus.SCHEDULED)
                 .stream()
-                .filter(f -> f.getScheduledDate().isAfter(startOfDay) && f.getScheduledDate().isBefore(endOfDay))
+                .filter(f -> f.getScheduledDate().isEqual(startOfDay))
                 .collect(Collectors.toList());
 
         return followUps.stream()
