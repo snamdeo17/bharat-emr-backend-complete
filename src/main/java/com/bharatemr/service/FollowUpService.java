@@ -209,6 +209,7 @@ public class FollowUpService {
     private FollowUpDto convertToDto(FollowUp followUp) {
         FollowUpDto dto = modelMapper.map(followUp, FollowUpDto.class);
         dto.setPatientName(followUp.getPatient().getFullName());
+        dto.setPatientId(followUp.getPatient().getPatientId());
         dto.setDoctorName(followUp.getDoctor().getFullName());
         dto.setStatus(followUp.getStatus().name());
         return dto;

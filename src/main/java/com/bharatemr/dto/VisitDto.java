@@ -22,7 +22,7 @@ public class VisitDto {
     private Long id;
     
     @NotNull(message = "Patient ID is required")
-    private Long patientId;
+    private String patientId;
     
     private Long doctorId;
     private String patientName;

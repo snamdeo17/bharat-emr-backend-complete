@@ -55,7 +55,7 @@ public class VisitService {
                 .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
 
         // Fetch patient
-        Patient patient = patientRepository.findById(visitDto.getPatientId())
+        Patient patient = patientRepository.findByPatientId(visitDto.getPatientId())
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
 
         // Create visit
@@ -218,7 +218,7 @@ public class VisitService {
         VisitDto dto = modelMapper.map(visit, VisitDto.class);
         dto.setPatientName(visit.getPatient().getFullName());
         dto.setDoctorName(visit.getDoctor().getFullName());
-        dto.setPatientId(visit.getPatient().getId());
+        dto.setPatientId(visit.getPatient().getPatientId());
         dto.setDoctorId(visit.getDoctor().getId());
 
         // Add prescription data if exists

@@ -26,6 +26,7 @@ public class FollowUpDto {
     private String status;
     private String notes;
     private String patientName;
+    private String patientId;
     private String doctorName;
     private LocalDateTime createdAt;
 }
