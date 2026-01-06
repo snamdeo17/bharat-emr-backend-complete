@@ -87,7 +87,7 @@ public class PdfGeneratorService {
         document.add(address);
         
         // Separator line
-        document.add(new Paragraph("=".repeat(80))
+        document.add(new Paragraph("-".repeat(80))
                 .setTextAlignment(TextAlignment.CENTER)
                 .setMarginBottom(10));
     }
@@ -124,7 +124,7 @@ public class PdfGeneratorService {
         // Medicines
         if (!prescription.getMedicines().isEmpty()) {
             document.add(new Paragraph("\nPrescription:").setBold().setFontSize(14));
-            document.add(new Paragraph("=".repeat(80)));
+            document.add(new Paragraph("-".repeat(80)));
             
             Table medicineTable = new Table(UnitValue.createPercentArray(new float[]{3, 2, 2, 2, 3}));
             medicineTable.setWidth(UnitValue.createPercentValue(100));
@@ -152,7 +152,7 @@ public class PdfGeneratorService {
         // Tests
         if (!prescription.getTests().isEmpty()) {
             document.add(new Paragraph("\nRecommended Tests:").setBold().setFontSize(14));
-            document.add(new Paragraph("=".repeat(80)));
+            document.add(new Paragraph("-".repeat(80)));
             
             for (Test test : prescription.getTests()) {
                 document.add(new Paragraph("• " + test.getTestName()));
@@ -167,7 +167,7 @@ public class PdfGeneratorService {
     
     private void addFooter(Document document, Doctor doctor) {
         document.add(new Paragraph("\n\n"));
-        document.add(new Paragraph("=".repeat(80)));
+        document.add(new Paragraph("-".repeat(80)));
         
         Paragraph signature = new Paragraph("Dr. " + doctor.getFullName())
                 .setTextAlignment(TextAlignment.RIGHT)

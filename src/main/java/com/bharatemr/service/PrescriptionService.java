@@ -123,13 +123,16 @@ public class PrescriptionService {
         }
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public byte[] downloadPrescriptionPdf(Long visitId) {
         Prescription prescription = prescriptionRepository.findByVisitId(visitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Prescription not found"));
 
         if (prescription.getPdfUrl() == null) {
-            throw new ResourceNotFoundException("PDF not generated yet");
+            log.info("PDF not found for visit {}, generating it now...", visitId);
+            generatePrescriptionPdf(visitId);
+            // Refresh the prescription object
+            prescription = prescriptionRepository.findByVisitId(visitId).get();
         }
 
         try {
