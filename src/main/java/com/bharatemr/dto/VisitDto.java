@@ -27,7 +27,7 @@ public class VisitDto {
     private Long doctorId;
     private String patientName;
     private String doctorName;
-    private LocalDate visitDate;
+    private LocalDateTime visitDate;
     
     @NotBlank(message = "Chief complaint is required")
     private String chiefComplaint;
