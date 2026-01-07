@@ -55,7 +55,7 @@ public class VisitService {
                 .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
 
         // Fetch patient
-        Patient patient = patientRepository.findByPatientId(visitDto.getPatientId())
+        Patient patient = patientRepository.findById(Long.parseLong(visitDto.getPatientId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
 
         // Create visit
