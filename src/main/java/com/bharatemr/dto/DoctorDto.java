@@ -26,5 +26,6 @@ public class DoctorDto {
     private String profilePhotoUrl;
     private Boolean isActive;
     private Boolean isBlocked;
+    private String preferredTheme;
     private LocalDateTime createdAt;
 }

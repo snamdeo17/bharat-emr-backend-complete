@@ -46,5 +46,6 @@ public class PatientDto {
     private String onboardedByDoctorName;
     private String onboardedByDoctorId_str;
     private Boolean isActive;
+    private String preferredTheme;
     private LocalDateTime createdAt;
 }

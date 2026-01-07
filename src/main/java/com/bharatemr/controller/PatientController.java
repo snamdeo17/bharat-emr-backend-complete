@@ -79,6 +79,16 @@ public class PatientController {
         return ResponseEntity.ok(ApiResponse.success(patient));
     }
 
+    @PutMapping("/profile")
+    @PreAuthorize("hasRole('PATIENT')")
+    public ResponseEntity<ApiResponse<PatientDto>> updatePatientProfile(
+            @Valid @RequestBody PatientDto dto) {
+        String patientId = SecurityUtils.getCurrentUserId();
+        log.info("Updating profile for patient: {}", patientId);
+        PatientDto updated = patientService.updatePatientProfile(patientId, dto);
+        return ResponseEntity.ok(ApiResponse.success("Profile updated successfully", updated));
+    }
+
     @GetMapping("/by-mobile/{mobileNumber}")
     @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN')")
     public ResponseEntity<ApiResponse<PatientDto>> getPatientByMobileNumber(

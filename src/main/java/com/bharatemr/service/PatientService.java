@@ -78,6 +78,7 @@ public class PatientService {
                 .name(patient.getFullName())
                 .userType("PATIENT")
                 .expiresIn(86400000L)
+                .preferredTheme(patient.getPreferredTheme())
                 .build();
     }
 
@@ -149,6 +150,8 @@ public class PatientService {
             patient.setEmail(dto.getEmail());
         if (dto.getAddress() != null)
             patient.setAddress(dto.getAddress());
+        if (dto.getPreferredTheme() != null)
+            patient.setPreferredTheme(dto.getPreferredTheme());
 
         Patient updated = patientRepository.save(patient);
 

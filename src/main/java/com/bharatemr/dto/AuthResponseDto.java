@@ -17,4 +17,5 @@ public class AuthResponseDto {
     private String userType;
     private String specialization;
     private Long expiresIn;
+    private String preferredTheme;
 }

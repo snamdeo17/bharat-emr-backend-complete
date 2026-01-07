@@ -119,6 +119,7 @@ public class DoctorService {
                 .userType("DOCTOR")
                 .specialization(savedDoctor.getSpecialization())
                 .expiresIn(86400000L)
+                .preferredTheme(savedDoctor.getPreferredTheme())
                 .build();
     }
 
@@ -160,6 +161,7 @@ public class DoctorService {
                 .userType("DOCTOR")
                 .specialization(doctor.getSpecialization())
                 .expiresIn(86400000L)
+                .preferredTheme(doctor.getPreferredTheme())
                 .build();
     }
 
@@ -191,6 +193,8 @@ public class DoctorService {
             doctor.setClinicAddress(dto.getClinicAddress());
         if (dto.getProfilePhotoUrl() != null)
             doctor.setProfilePhotoUrl(dto.getProfilePhotoUrl());
+        if (dto.getPreferredTheme() != null)
+            doctor.setPreferredTheme(dto.getPreferredTheme());
 
         Doctor updated = doctorRepository.save(doctor);
 
