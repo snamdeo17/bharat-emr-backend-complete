@@ -1,5 +1,6 @@
 package com.bharatemr.service;
 
+import com.bharatemr.dto.PaginatedResponse;
 import com.bharatemr.dto.AuthResponseDto;
 import com.bharatemr.dto.PatientDto;
 import com.bharatemr.dto.VisitDto;
@@ -13,9 +14,17 @@ import com.bharatemr.security.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.criteria.Predicate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -173,6 +182,91 @@ public class PatientService {
         return patientRepository.findAll().stream()
                 .map(patient -> modelMapper.map(patient, PatientDto.class))
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public PaginatedResponse<PatientDto> getPaginatedPatients(
+            int page, int size, String sortBy, String sortDir,
+            String search, String gender, Integer minAge, Integer maxAge,
+            String doctorId, Boolean isActive, LocalDateTime createdFrom, LocalDateTime createdTo) {
+
+        Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page - 1, size, sort);
+
+        Specification<Patient> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (search != null && !search.isEmpty()) {
+                String lSearch = "%" + search.toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("fullName")), lSearch),
+                        cb.like(cb.lower(root.get("mobileNumber")), lSearch),
+                        cb.like(cb.lower(root.get("email")), lSearch),
+                        cb.like(cb.lower(root.get("patientId")), lSearch)));
+            }
+
+            if (gender != null && !gender.isEmpty()) {
+                predicates.add(cb.equal(root.get("gender"), gender));
+            }
+
+            if (minAge != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("age"), minAge));
+            }
+
+            if (maxAge != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("age"), maxAge));
+            }
+
+            if (doctorId != null && !doctorId.isEmpty()) {
+                predicates.add(cb.equal(root.get("onboardedByDoctor").get("doctorId"), doctorId));
+            }
+
+            if (isActive != null) {
+                predicates.add(cb.equal(root.get("isActive"), isActive));
+            }
+
+            if (createdFrom != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), createdFrom));
+            }
+
+            if (createdTo != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), createdTo));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<Patient> patientPage = patientRepository.findAll(spec, pageable);
+
+        List<PatientDto> dtos = patientPage.getContent().stream()
+                .map(patient -> {
+                    PatientDto dto = modelMapper.map(patient, PatientDto.class);
+                    dto.setOnboardedByDoctorName(patient.getOnboardedByDoctor().getFullName());
+                    dto.setOnboardedByDoctorId_str(patient.getOnboardedByDoctor().getDoctorId());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+
+        Map<String, Object> echoedFilters = new HashMap<>();
+        echoedFilters.put("search", search);
+        echoedFilters.put("gender", gender);
+        echoedFilters.put("minAge", minAge);
+        echoedFilters.put("maxAge", maxAge);
+        echoedFilters.put("doctorId", doctorId);
+        echoedFilters.put("isActive", isActive);
+        echoedFilters.put("createdFrom", createdFrom);
+        echoedFilters.put("createdTo", createdTo);
+
+        return PaginatedResponse.<PatientDto>builder()
+                .data(dtos)
+                .page(page)
+                .size(size)
+                .totalElements(patientPage.getTotalElements())
+                .totalPages(patientPage.getTotalPages())
+                .sortBy(sortBy)
+                .sortDir(sortDir)
+                .filters(echoedFilters)
+                .build();
     }
 
     @Transactional(readOnly = true)
