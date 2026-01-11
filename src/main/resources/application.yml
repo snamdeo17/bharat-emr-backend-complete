@@ -3,10 +3,10 @@ spring:
     name: bharat-emr-backend
   
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:bharatemr_final}
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
+    url: jdbc:postgresql://bharat-emt-postgres-shivendranamdev-8344.i.aivencloud.com:19848/defaultdb?sslmode=require
     driver-class-name: org.postgresql.Driver
+    username: avnadmin
+    password: AVNS_9mu881dl07okMIlU2ov
     hikari:
       maximum-pool-size: 10
       minimum-idle: 5

@@ -14,10 +14,20 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bharatemr.dto.PaginatedResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+
+import javax.persistence.criteria.Predicate;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -212,6 +222,64 @@ public class VisitService {
         return visits.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public PaginatedResponse<VisitDto> getPaginatedVisits(
+            int page, int size, String sortBy, String sortDir,
+            String search, String doctorId, LocalDateTime visitFrom, LocalDateTime visitTo) {
+
+        Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page - 1, size, sort);
+
+        Specification<Visit> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (search != null && !search.isEmpty()) {
+                String lSearch = "%" + search.toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("patient").get("fullName")), lSearch),
+                        cb.like(cb.lower(root.get("chiefComplaint")), lSearch),
+                        cb.like(root.get("id").as(String.class), lSearch)));
+            }
+
+            if (doctorId != null && !doctorId.isEmpty()) {
+                predicates.add(cb.equal(root.get("doctor").get("doctorId"), doctorId));
+            }
+
+            if (visitFrom != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("visitDate"), visitFrom));
+            }
+
+            if (visitTo != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("visitDate"), visitTo));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<Visit> visitPage = visitRepository.findAll(spec, pageable);
+
+        List<VisitDto> dtos = visitPage.getContent().stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+
+        Map<String, Object> echoedFilters = new HashMap<>();
+        echoedFilters.put("search", search);
+        echoedFilters.put("doctorId", doctorId);
+        echoedFilters.put("visitFrom", visitFrom);
+        echoedFilters.put("visitTo", visitTo);
+
+        return PaginatedResponse.<VisitDto>builder()
+                .data(dtos)
+                .page(page)
+                .size(size)
+                .totalElements(visitPage.getTotalElements())
+                .totalPages(visitPage.getTotalPages())
+                .sortBy(sortBy)
+                .sortDir(sortDir)
+                .filters(echoedFilters)
+                .build();
     }
 
     private VisitDto convertToDto(Visit visit) {
